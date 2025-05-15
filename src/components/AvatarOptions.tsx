@@ -35,7 +35,7 @@ const AvatarOptions: React.FC<AvatarOptionsProps> = ({
                   : "border-border hover:border-primary/50"
               )}
               style={{ 
-                backgroundColor: colorMap[option] || '#ccc',
+                backgroundColor: colorMap[option] || '#ccc'
               }}
               onClick={() => onChange(option)}
               title={option}
@@ -54,7 +54,7 @@ const AvatarOptions: React.FC<AvatarOptionsProps> = ({
             >
               {option.replace(/([A-Z])/g, ' $1').trim()}
             </button>
-          )}
+          );
         })}
       </div>
     </div>
