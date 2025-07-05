@@ -58,33 +58,82 @@ const AvatarGenerator: React.FC = () => {
     setAvatarConfig(prev => ({ ...prev, [category]: value }));
   };
   
-  const downloadAvatar = () => {
-    const svgElement = document.getElementById('avatar-svg');
-    if (!svgElement) return;
-    
-    const svgData = new XMLSerializer().serializeToString(svgElement);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    
-    canvas.width = 300;
-    canvas.height = 300;
-    
-    img.onload = () => {
-      if (ctx) {
-        ctx.drawImage(img, 0, 0, 300, 300);
-        const pngFile = canvas.toDataURL('image/png');
-        
-        const downloadLink = document.createElement('a');
-        downloadLink.download = 'my-avatar.png';
-        downloadLink.href = pngFile;
-        downloadLink.click();
-        
-        toast.success('Avatar downloaded successfully!');
+  const downloadAvatar = async () => {
+    try {
+      const svgElement = document.querySelector('#avatar-svg svg') as SVGElement;
+      if (!svgElement) {
+        toast.error('Avatar not found. Please try again.');
+        return;
       }
-    };
-    
-    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+      
+      // Clone the SVG to avoid modifying the original
+      const svgClone = svgElement.cloneNode(true) as SVGElement;
+      
+      // Set explicit dimensions
+      svgClone.setAttribute('width', '300');
+      svgClone.setAttribute('height', '300');
+      
+      // Convert SVG to string
+      const svgData = new XMLSerializer().serializeToString(svgClone);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      
+      // Create canvas for conversion
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 300;
+      canvas.height = 300;
+      
+      if (!ctx) {
+        toast.error('Canvas not supported in your browser.');
+        return;
+      }
+      
+      // Create image from SVG
+      const img = new Image();
+      const url = URL.createObjectURL(svgBlob);
+      
+      img.onload = () => {
+        // Draw white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 300, 300);
+        
+        // Draw the avatar
+        ctx.drawImage(img, 0, 0, 300, 300);
+        
+        // Convert to PNG and download
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const downloadUrl = URL.createObjectURL(blob);
+            const downloadLink = document.createElement('a');
+            downloadLink.download = 'my-avatar.png';
+            downloadLink.href = downloadUrl;
+            downloadLink.style.display = 'none';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            // Clean up URLs
+            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(downloadUrl);
+            
+            toast.success('Avatar downloaded successfully!');
+          } else {
+            toast.error('Failed to create download file.');
+          }
+        }, 'image/png');
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        toast.error('Failed to load avatar for download.');
+      };
+      
+      img.src = url;
+      
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download avatar. Please try again.');
+    }
   };
   
   return (
