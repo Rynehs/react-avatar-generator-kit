@@ -83,7 +83,6 @@ export const colorMap: Record<string, string> = {
   Yellow: '#F8D25C',
   Pale: '#FFDBB4',
   Light: '#EDB98A',
-  Brown: '#D08B5B',
   DarkBrown: '#AE5D29',
   
   // Clothes colors
